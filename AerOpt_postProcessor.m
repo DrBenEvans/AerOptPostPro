@@ -8,8 +8,8 @@ fprintf('in the USER INPUTS section.\n\n');
 % Make sure case & run names are correct, with each string terminating in 
 % a "/" character.
 % E.g.: caseName = 'XC10_preOpt/' and runName = 'AerOpt2D_3.1_180820_1219/'
-caseName   = 'aerOpt_xc10_bowProfile/';
- runName   = 'AerOpt2D_3.1_181001_1712/';
+caseName   = 'aerOpt_xc10_fixedRearWing/';
+ runName   = 'AerOpt2d_3.1_180830_1504/';
 
 % Post-pro options.
 nestToPlot = 1;             % Set to 1 to plot best nest, 2 for next, etc.
