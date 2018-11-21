@@ -78,7 +78,8 @@ line    = fgetl(fid);
 objFunc = fgetl(fid);
 objFunc = strsplit(objFunc);
 objFunc = str2double(objFunc{3});
-objFuncOptions = {'Lift/Drag','Distortion','Maximum Lift','Minimum Drag','Maximum Downforce','Minimum Lift'};
+objFunc = 8   %temporary hardwire
+objFuncOptions = {'Lift/Drag','Distortion','Maximum Lift','Minimum Drag','Maximum Downforce','Minimum Lift','GeomMatching','Inverse Airfoil Design'};
 objFunc = objFuncOptions{objFunc};
 
 % Skip some lines.

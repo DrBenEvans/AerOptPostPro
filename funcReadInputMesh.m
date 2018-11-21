@@ -7,7 +7,7 @@ if fid == -1
 end
 
 x   = textscan(fid,'%d',1); % Header number.
-x   = textscan(fid,'%s',4); % Header strings.
+x   = textscan(fid,'%s',6); % Header strings.
 ne  = textscan(fid,'%d',1); % Num elements.
 np  = textscan(fid,'%d',1); % Num points.
 nbf = textscan(fid,'%d',1); % Num boudary faces.
@@ -16,21 +16,21 @@ nbf = textscan(fid,'%d',1); % Num boudary faces.
 x   = textscan(fid,'%s',1); % "Connectivities".
 input = textscan(fid,'%f',(5*ne{1}));
 inp = input{1};
-connec = zeros(length(inp)/5,3);
-for i = 1:(length(inp)/5)
-    connec(i,1) = inp(5*i-3);
-    connec(i,2) = inp(5*i-2);
-    connec(i,3) = inp(5*i-1);
+connec = zeros(length(inp)/4,3);
+for i = 1:(length(inp)/4)
+    connec(i,1) = inp(4*i-2);
+    connec(i,2) = inp(4*i-1);
+    connec(i,3) = inp(4*i);
 end
 
 % Get coordinates.
 x = textscan(fid,'%s',1); % "Coordinates".
-input = textscan(fid,'%f',(5*np{1}));
+input = textscan(fid,'%f',(3*np{1}));
 inp = input{1};
-coord = zeros(length(inp)/5,2);
-for i = 1:(length(inp)/5)
-    coord(i,1) = inp(5*i-3);
-    coord(i,2) = inp(5*i-2);
+coord = zeros(length(inp)/3,2);
+for i = 1:(length(inp)/3)
+    coord(i,1) = inp(3*i-1);
+    coord(i,2) = inp(3*i);
 end
 
 % Get bounds.

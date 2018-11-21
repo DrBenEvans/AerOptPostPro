@@ -8,12 +8,12 @@ fprintf('in the USER INPUTS section.\n\n');
 % Make sure case & run names are correct, with each string terminating in 
 % a "/" character.
 % E.g.: caseName = 'XC10_preOpt/' and runName = 'AerOpt2D_3.1_180820_1219/'
-caseName   = 'aerOpt_xc10_fixedRearWing/';
- runName   = 'AerOpt2d_3.1_180830_1504/';
+caseName   = 'FoilDesign/';
+ runName   = 'AerOpt2d_3.5_181112_1627/';
 
 % Post-pro options.
 nestToPlot = 1;             % Set to 1 to plot best nest, 2 for next, etc.
-plotArea   = [-11 1 0 2.5]; % Zoom all plots to area of interest.
+plotArea   = [-1 2 -0.5 0.5]; % Zoom all plots to area of interest.
 numBodies  = 2;             % May need to be bigger than expected in event 
                             % of surface jumping ( e.g.: at thin parts of 
                             % airfoils).
@@ -21,13 +21,13 @@ numBodies  = 2;             % May need to be bigger than expected in event
 % Boundary-plotting options (tricksy, beware).
 % Area in which bodies of interest lay, make sure to exclude farfield
 % boundaries.
-areaOfBodies = [-11 1 -0.001 2.5];
+areaOfBodies = [-1 2 -0.5 0.5];
 % Set start point for knn search. Try not to start this near thin sections
 % where jumping is likely to occur. For XC10, place at [-8.5 1.5].
-searchPoint  = [-8.5 1.5];
+searchPoint  = [-1.0 0.0];
 % Distance between knn jumps for which it should be considered to have 
 % jumped to a new body.
-jumpCriteria = 0.1;
+jumpCriteria = 0.5;
 
 %% AUTOMATED PARAMETER READ.
 % Read parameters from 'AerOpt_InputParameters.txt' file.
@@ -298,42 +298,73 @@ if strcmpi(gifOption, 'y')
     end
 end
 
-%% SNAPSHOT ANALYSIS (IF USER REQUESTS).
+%% SNAPSHOT ANALYSIS (IF USER REQUESTS). MAKE THIS A SUBFUNCTION SOMETIME!
 if trackCN_option == true
-    % Call function here.
+    % Read top nest data.
     [topNest_xCoords,topNest_yCoords] = funcReadNests(caseName,runName,trackCN,Ma,NoCN,NoNests,NoG_actual,CNs);
     
-    % Plot Nests progression.
-    % 2D plot of pure CN coord progression.
+    % Three cases:
+    % 1. Freedom in both x and y: plot x and y coord progression against
+    %                             one another with x and y limits as a 
+    %                             bounding box.
+    % 2. Freedom in x only: plot x movement against number of generations.
+    % 3. Freedom in y only: plot y movement against number of generations.
+    
+    % Set up figure.
     figure(f); f = f+1;
     hold on; grid on; axis equal;
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 0.3, 0.5]);
     movegui(f-1,'north');
     title(['Top Nest Coord Progression for CN#',num2str(trackCN)]);
-    xlabel('x-coords'); ylabel('y-coord');
-    % Set axis 20% larger than CN bounds.
-    axis([CNs(trackCN,1)+min(CNxrange(trackCN,:))*1.2 CNs(trackCN,1)+max(CNxrange(trackCN,:))*1.2...
+        
+    % 1. FREEDOM IN X AND Y.
+    if CNxrange(trackCN,1) ~= CNxrange(trackCN,2) && CNyrange(trackCN,1) ~= CNyrange(trackCN,2)
+        % Plot x and y coordinates against each other.
+        xlabel('x-coords'); ylabel('y-coord');
+        plot(topNest_xCoords,topNest_yCoords,'LineWidth',1.5)
+        % Set axis 20% larger than CN bounds.
+        axis([CNs(trackCN,1)+min(CNxrange(trackCN,:))*1.2 CNs(trackCN,1)+max(CNxrange(trackCN,:))*1.2...
           CNs(trackCN,2)+min(CNyrange(trackCN,:))*1.2 CNs(trackCN,2)+max(CNyrange(trackCN,:))*1.5])
-   
-    plot(topNest_xCoords,topNest_yCoords,'LineWidth',1.5)
-    
-    % Plot CN bounding box.
-    hold on;
-    for i = 1:length(CNsFreeIdx)
-    plot(CNxBoxCoords(:,i),CNyBoxCoords(:,i),'r.-.')
+        % Plot CN bounding box.
+        hold on;
+        for i = 1:length(CNsFreeIdx)
+            plot(CNxBoxCoords(:,i),CNyBoxCoords(:,i),'r.-.')
+        end
+        h = zeros(2,1);
+        h(1) = plot(NaN,NaN,'b','LineWidth',1.5);
+        h(2) = plot(NaN,NaN,'r.-.');
+        legend(h,'CN Coord Progression','CN Bounds');
+        % Annotate beginning and end of optimisation.
+        hold on;
+        scatter(topNest_xCoords(1,1),topNest_yCoords(1,1),'ro');
+        text(topNest_xCoords(1,1),topNest_yCoords(1,1)-0.01*topNest_yCoords(1,1),'Baseline');
+        scatter(topNest_xCoords(end),topNest_yCoords(end),'ro');
+        text(topNest_xCoords(end),topNest_yCoords(end)+0.01*topNest_yCoords(end),'Optimal');
+        
+    % 2. FREEDOM IN X ONLY.
+    elseif CNxrange(trackCN,1) ~= CNxrange(trackCN,2) && CNyrange(trackCN,1) == CNyrange(trackCN,2)
+        % Plot x coordinates against number of generations.
+        xlabel('x-coords'); ylabel('Number of Generations');
+        axis normal % Reset from equal.
+        plot(topNest_xCoords, 1:length(topNest_xCoords))
+        
+    % 3. FREEDOM IN Y ONLY.
+    elseif CNxrange(trackCN,1) == CNxrange(trackCN,2) && CNyrange(trackCN,1) ~= CNyrange(trackCN,2)
+        % Plot x coordinates against number of generations.
+        xlabel('Number of Generations'); ylabel('y-coords');
+        axis normal % Reset from equal.
+        plot(1:length(topNest_yCoords), topNest_yCoords)
+        % Plot y-axis bounds.
+        hold on;
+        line([0 length(topNest_yCoords)],[max(CNyBoxCoords(:,trackCN)) max(CNyBoxCoords(:,trackCN))],'Color','red','LineStyle','--') % Top bound.
+        line([0 length(topNest_yCoords)],[min(CNyBoxCoords(:,trackCN)) min(CNyBoxCoords(:,trackCN))],'Color','red','LineStyle','--') % Top bound.
+        
+        
+    else
+        fprintf('\nYou have chosen a fixed CN you numpty.\n');
     end
     
-    h = zeros(2,1);
-    h(1) = plot(NaN,NaN,'b','LineWidth',1.5);
-    h(2) = plot(NaN,NaN,'r.-.');
-    legend(h,'CN Coord Progression','CN Bounds');
-    
-    % Annotate beginning and end of optimisation.
-    hold on;
-    scatter(topNest_xCoords(1,1),topNest_yCoords(1,1),'ro');
-    text(topNest_xCoords(1,1),topNest_yCoords(1,1)-0.01*topNest_yCoords(1,1),'Baseline');
-    scatter(topNest_xCoords(end),topNest_yCoords(end),'ro');
-    text(topNest_xCoords(end),topNest_yCoords(end)+0.01*topNest_yCoords(end),'Optimal');
+
 
     
     % 3D plot showing coords change and corresponding fitness improvement.
@@ -344,9 +375,12 @@ if trackCN_option == true
     movegui(f-1,'south');
     title(['Top Nest Coord Progression for CN#',num2str(trackCN),' against Fitness.']);
     xlabel('x-coords'); ylabel('y-coord'); zlabel('Fitness');
+    % Only set axis limits if there is freedom in x AND y direction.
+    if CNxrange(trackCN,1) ~= CNxrange(trackCN,1) && CNyrange(trackCN,1) ~= CNyrange(trackCN,1)
     axis([CNs(trackCN,1)+min(CNxrange(trackCN,:)) CNs(trackCN,1)+max(CNxrange(trackCN,:))...
           CNs(trackCN,2)+min(CNyrange(trackCN,:)) CNs(trackCN,2)+max(CNyrange(trackCN,:))...
           min(fitness(:,1)) max(fitness(:,1))])
+    end
     
     funcColourLine3D(topNest_xCoords,topNest_yCoords,fitness(:,1),fitness(:,1),'LineWidth',1.5);
     colormap(jet);
