@@ -8,8 +8,8 @@ fprintf('in the USER INPUTS section.\n\n');
 % Make sure case & run names are correct, with each string terminating in 
 % a "/" character.
 % E.g.: caseName = 'XC10_preOpt/' and runName = 'AerOpt2D_3.1_180820_1219/'
-caseName   = 'FoilDesign/';
- runName   = 'AerOpt2d_3.5_181112_1627/';
+caseName   = 'liftdragmax/';
+ runName   = 'AerOpt2D_3.5_190807_1719/';
 
 % Post-pro options.
 nestToPlot = 1;             % Set to 1 to plot best nest, 2 for next, etc.
@@ -100,6 +100,7 @@ for i = 1:NoNests
 end
 title('Fitness Development');
 xlabel('Number of Generations'); ylabel('Fitness');
+%ylim([-2.0 0.0])
 legendString = cell(NoNests+1,1);
 legendString(1) = cellstr('Baseline');
 for i = 1:NoNests
@@ -241,49 +242,71 @@ h(2) = plot(NaN,NaN,'ko','MarkerFaceColor','g');
 h(3) = plot(NaN,NaN,'rx','LineWidth',2);
 h(4) = plot(NaN,NaN,'r.-.');
 legend(h,'Mesh','CNs Fixed','CNs Free','CN Bounds');
-%% PLOT THE BASELINE AND OPTIMISED Cp DISTRIBUTIONS (IF CASE IS INVERSE AEROFOIL DESIGN)
-if objFunc=='Inverse Airfoil Design'
-    % read and plot the target Cp distribution
-    filepath = [caseName,'Input_Data/AIRFOIL_PRESSURE_COEF.txt'];
-    fid = fopen(filepath);
-    npoin  = fscanf(fid,'%d',1); % Num points.
-    for ip = 1:npoin
-        A  = fscanf(fid,'%f',[1,2]);
-        x(ip) = A(1);
-        Cp(ip) = A(2);
-    end
-    fclose(fid);
-    figure
-    plot(x,-Cp)
-    grid on
-    xlabel('x-coordinate')
-    ylabel('-Cp')
-    title('Cp Distribution')
-    hold on
-    % now read and plot the Cp of the best nest at the final generation
-    filepath = [caseName,runName,'Output_Data/Geometry',num2str(NoG_actual),'.dat'];
-    [connec,coord,bface] = funcReadMesh(filepath);
-    filepath = [caseName,runName,'Output_Data/Geometry',num2str(NoG_actual),'.unk'];
-    unk = funcReadUnk(filepath);
-    %Compute Cp across boundary and plot
-    num=0;
-    rho_amb=Pamb/(R*Tamb);
-    u_amb=Ma*sqrt(1.4*R*Tamb);
-    for ib=1:length(bface)
-        if bface(ib,3)==6
-            ip1=bface(ib,1);
-            ip2=bface(ib,2);
-            p1=unk(ip1,6)*rho_amb*u_amb*u_amb;
-            p2=unk(ip2,6)*rho_amb*u_amb*u_amb;
-            Cp_opt(1)=(p1-Pamb)/(0.5*rho_amb*u_amb*u_amb);
-            Cp_opt(2)=(p2-Pamb)/(0.5*rho_amb*u_amb*u_amb);
-            x_opt(1)=coord(ip1,1);
-            x_opt(2)=coord(ip2,1);
-            plot(x_opt,-Cp_opt,'m')
-        end
-    end
-    legend('Target Cp','Optimised Cp (best nest, final generation)')
-end
+%%% PLOT THE BASELINE AND OPTIMISED Cp DISTRIBUTIONS (IF CASE IS INVERSE AEROFOIL DESIGN)
+%if objFunc=='Inverse Airfoil Design'
+%    % read and plot the target Cp distribution
+%    filepath = [caseName,'Input_Data/AIRFOIL_PRESSURE_COEF.txt'];
+%    fid = fopen(filepath);
+%    npoin  = fscanf(fid,'%d',1); % Num points.
+%    for ip = 1:npoin
+%        A  = fscanf(fid,'%f',[1,2]);
+%        x(ip) = A(1);
+%        Cp(ip) = A(2);
+%    end
+%    fclose(fid);
+%    figure
+%    plot(x,-Cp)
+%    grid on
+%    xlabel('x-coordinate')
+%    ylabel('-Cp')
+%    title('Cp Distribution')
+%    hold on
+%    % now read and plot the Cp of the baseline (input) solution
+%    filepath = [caseName,'Input_Data/',baselineMesh];
+%    [connec,coord,bface] = funcReadInputMesh(filepath);
+%    filepath = [caseName,'Input_Data/Baseline.unk'];
+%    unk = funcReadUnk(filepath);
+%    %Compute Cp across boundary and plot
+%    num=0;
+%    rho_amb=Pamb/(R*Tamb);
+%    u_amb=Ma*sqrt(1.4*R*Tamb);
+%    for ib=1:length(bface)
+%        if bface(ib,3)==6
+%            ip1=bface(ib,1);
+%            ip2=bface(ib,2);
+%            p1=unk(ip1,6)*rho_amb*u_amb*u_amb;
+%            p2=unk(ip2,6)*rho_amb*u_amb*u_amb;
+%            Cp_opt(1)=(p1-Pamb)/(0.5*rho_amb*u_amb*u_amb);
+%            Cp_opt(2)=(p2-Pamb)/(0.5*rho_amb*u_amb*u_amb);
+%            x_opt(1)=coord(ip1,1);
+%            x_opt(2)=coord(ip2,1);
+%            plot(x_opt,-Cp_opt,'g')
+%        end
+%    end
+%    % now read and plot the Cp of the best nest at the final generation
+%    filepath = [caseName,runName,'Output_Data/Geometry',num2str(NoG_actual),'.dat'];
+%    [connec,coord,bface] = funcReadMesh(filepath);
+%    filepath = [caseName,runName,'Output_Data/Geometry',num2str(NoG_actual),'.unk'];
+%    unk = funcReadUnk(filepath);
+%    %Compute Cp across boundary and plot
+%    num=0;
+%    rho_amb=Pamb/(R*Tamb);
+%    u_amb=Ma*sqrt(1.4*R*Tamb);
+%    for ib=1:length(bface)
+%        if bface(ib,3)==6
+%            ip1=bface(ib,1);
+%            ip2=bface(ib,2);
+%            p1=unk(ip1,6)*rho_amb*u_amb*u_amb;
+%            p2=unk(ip2,6)*rho_amb*u_amb*u_amb;
+%            Cp_opt(1)=(p1-Pamb)/(0.5*rho_amb*u_amb*u_amb);
+%            Cp_opt(2)=(p2-Pamb)/(0.5*rho_amb*u_amb*u_amb);
+%            x_opt(1)=coord(ip1,1);
+%            x_opt(2)=coord(ip2,1);
+%            plot(x_opt,-Cp_opt,'m')
+%        end
+%    end
+%    legend('Target Cp','Baseline geometry Cp','Optimised Cp (best nest, final generation) - magenta')
+%end
 %% WRITE AND SAVE MESH GIF (IF USER REQUESTS).
 if strcmpi(gifOption, 'y')
     for i = 1:NoG_actual

@@ -1,6 +1,6 @@
 function [fitness,fitnessBaseline,NoG_actual] = funcReadFitness(caseName,runName,NoNests,Ma)
 
-fid = fopen([caseName,runName,'Fitness',num2str(Ma,1),'.txt']);
+fid = fopen([caseName,runName,'FitnessAll.txt']);
 
 if fid == -1
     error('ERROR(funcReadFitness): Fitness file not found.');
@@ -11,7 +11,8 @@ readString = '%d';
 for i = 1:NoNests
     readString = strcat(readString,'%f');
 end
-fitnessRead = textscan(fid,readString,'HeaderLines',1);
+%fitnessRead = textscan(fid,readString,'HeaderLines',1);
+fitnessRead = textscan(fid,readString);
 NoNests = length(fitnessRead)-1;
 NoG_actual = length(fitnessRead{1});
 fclose(fid);

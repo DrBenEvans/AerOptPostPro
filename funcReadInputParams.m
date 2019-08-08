@@ -78,7 +78,7 @@ line    = fgetl(fid);
 objFunc = fgetl(fid);
 objFunc = strsplit(objFunc);
 objFunc = str2double(objFunc{3});
-objFunc = 8   %temporary hardwire
+% objFunc = 8   %temporary hardwire  - FIX!!
 objFuncOptions = {'Lift/Drag','Distortion','Maximum Lift','Minimum Drag','Maximum Downforce','Minimum Lift','GeomMatching','Inverse Airfoil Design'};
 objFunc = objFuncOptions{objFunc};
 
